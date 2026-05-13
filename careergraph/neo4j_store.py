@@ -228,7 +228,7 @@ def build_graph_payload(graph_plan: CareerGraphPlan) -> dict[str, Any]:
                 "id": resource.id,
                 "title": resource.title,
                 "type": resource.type,
-                "url": resource.url,
+                "url": resource.url or "",
                 "teaches": [skill_ref(name) for name in resource.teaches_skills],
             }
             for resource in graph_plan.resources

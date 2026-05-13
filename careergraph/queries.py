@@ -16,11 +16,11 @@ from careergraph.schema import CareerGraphPlan, DemoQueryResults, HelpPersona, P
 
 SHORTEST_CAREER_PATH_QUERY = """
 MATCH (p:Person {id: $personId})-[:TARGETS]->(goal:CareerGoal)
-MATCH (p)-[:MISSING]->(missing:Skill)
+MATCH (p)-[:MISSING]->(missing:Skill {id: $nextSkillId})
 MATCH path = (missing)-[:PREREQUISITE_OF*0..5]->(goal)
-RETURN [node IN nodes(path) | node.name] AS path
 ORDER BY length(path)
 LIMIT 1
+RETURN [node IN nodes(path) | node.name] AS path
 """
 
 BEST_PROJECT_QUERY = """
@@ -39,7 +39,7 @@ MATCH (p:Person {id: $personId})-[:MISSING]->(s:Skill)<-[:TEACHES]-(r:Resource)
 RETURN s.name AS skill,
        r.title AS resource,
        r.type AS type,
-       r.url AS url
+       coalesce(r.url, "") AS url
 ORDER BY s.difficulty ASC, r.title ASC
 LIMIT 3
 """
@@ -80,7 +80,11 @@ def build_neo4j_results(
     driver = GraphDatabase.driver(config.uri, auth=(config.username, config.password))
     try:
         with driver.session(database=config.database) as session:
-            path_record = session.run(SHORTEST_CAREER_PATH_QUERY, personId=person_id).single()
+            path_record = session.run(
+                SHORTEST_CAREER_PATH_QUERY,
+                personId=person_id,
+                nextSkillId=skill_id(graph_plan.next_best_skill),
+            ).single()
             project_record = session.run(BEST_PROJECT_QUERY, personId=person_id).single()
             resource_records = list(session.run(BEST_RESOURCE_QUERY, personId=person_id))
             persona_record = session.run(

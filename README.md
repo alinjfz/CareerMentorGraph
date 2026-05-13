@@ -7,17 +7,38 @@ project, and generates an HTML career map.
 ## Quick Demo
 
 ```bash
-python3 careergraph.py demo --demo-fast
+.venv/bin/python careergraph.py demo --demo-fast
 ```
 
 The default path is deterministic and does not require API keys or Neo4j.
+
+## Local Installation
+
+The project is set up with a local virtual environment:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+```
+
+The current local `.env` contains:
+
+```bash
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=CareerGraphPass123
+NEO4J_DATABASE=neo4j
+```
+
+`OPENAI_API_KEY` is intentionally blank. Add your key only when you want live
+LLM extraction.
 
 ## Optional LLM Extraction
 
 Set `OPENAI_API_KEY` in `.env`, then run:
 
 ```bash
-python3 careergraph.py demo --use-llm
+.venv/bin/python careergraph.py demo --use-llm
 ```
 
 If the LLM output fails validation, CareerGraph retries once and then falls
@@ -25,22 +46,41 @@ back to the built-in Full-stack Developer graph.
 
 ## Optional Neo4j Persistence
 
-Install dependencies:
+Start Neo4j with Docker:
 
 ```bash
-python3 -m pip install -r requirements.txt
+scripts/start_neo4j.sh
 ```
 
-Set the Neo4j values in `.env`, then run:
+Neo4j Browser opens at:
+
+```text
+http://localhost:7474
+```
+
+Use:
+
+```text
+Username: neo4j
+Password: CareerGraphPass123
+```
+
+Then write/query the graph:
 
 ```bash
-python3 careergraph.py demo --demo-fast --write-neo4j --query-neo4j
+.venv/bin/python careergraph.py demo --demo-fast --write-neo4j --query-neo4j
+```
+
+Stop Neo4j with:
+
+```bash
+scripts/stop_neo4j.sh
 ```
 
 ## Tests
 
 ```bash
-python3 -m unittest discover -s tests
+.venv/bin/python -m unittest discover -s tests
 ```
 
 ## Post-MVP Expansion

@@ -30,6 +30,8 @@ class DemoFlowTests(unittest.TestCase):
 
         html = render_html_report(graph_plan, results)
 
+        self.assertIn("career-graph", html)
+        self.assertIn("career-graph-data", html)
         self.assertIn("HTTP/API Basics", html)
         self.assertIn("Task Tracker Web App", html)
         self.assertIn("Backend mentor", html)
