@@ -25,118 +25,208 @@ def write_html_report(
 
 def render_html_report(graph_plan: CareerGraphPlan, results: DemoQueryResults) -> str:
     graph_json = render_graph_json(graph_plan, results)
-    evidence_items = "\n".join(
-        f"<li><strong>{escape(evidence.description)}</strong><span>{escape(', '.join(evidence.proves_skills))}</span></li>"
-        for evidence in graph_plan.known_evidence
-    )
-    missing_items = "\n".join(f"<li>{escape(skill)}</li>" for skill in graph_plan.missing_skills)
-    resource_items = "\n".join(render_resource_item(resource) for resource in results.best_resources)
-    proven_items = "\n".join(f"<li>{escape(skill)}</li>" for skill in results.proven_skills)
 
-    path = " -> ".join(results.shortest_path)
+    evidence_items = "\n".join(
+        f"<li><strong>{escape(e.description)}</strong><span>{escape(', '.join(e.proves_skills))}</span></li>"
+        for e in graph_plan.known_evidence
+    )
+    missing_items = "\n".join(
+        f'<li class="skill-item skill-missing"><span class="skill-dot"></span>{escape(skill)}</li>'
+        for skill in graph_plan.missing_skills
+    )
+    proven_items = "\n".join(
+        f'<li class="skill-item skill-proven"><span class="skill-dot"></span>{escape(skill)}</li>'
+        for skill in results.proven_skills
+    )
+    resource_items = "\n".join(render_resource_item(r) for r in results.best_resources)
     best_project_skills = ", ".join(results.best_project.proves_skills)
+
+    path_steps = results.shortest_path
+    path_parts = []
+    for i, step in enumerate(path_steps):
+        if i == 0:
+            css = "path-step-first"
+        elif i == len(path_steps) - 1:
+            css = "path-step-last"
+        else:
+            css = "path-step"
+        path_parts.append(f'<span class="{css}">{escape(step)}</span>')
+    path_html = '<span class="path-arrow">→</span>'.join(path_parts)
 
     return f"""<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CareerGraph Map</title>
+  <title>CareerGraph — {escape(graph_plan.person_name)}</title>
   <style>
     :root {{
-      color-scheme: light;
-      --ink: #18202a;
-      --muted: #607083;
-      --line: #d8e0ea;
-      --paper: #f6f8fb;
-      --panel: #ffffff;
-      --accent: #0f766e;
-      --accent-soft: #d9f2ee;
+      --bg: #000000;
+      --surface: #1c1c1e;
+      --surface-2: #2c2c2e;
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #f5f5f7;
+      --text-2: rgba(245, 245, 247, 0.5);
+      --text-3: rgba(245, 245, 247, 0.25);
+      --accent: #2dd4bf;
+      --accent-soft: rgba(45, 212, 191, 0.09);
+      --accent-border: rgba(45, 212, 191, 0.22);
       --graph-bg: #101418;
-      --graph-line: rgba(166, 190, 214, 0.26);
+      --graph-border: #242d36;
       --graph-text: #eff6ff;
+      --radius: 14px;
+      --radius-sm: 9px;
     }}
 
-    * {{
+    *, *::before, *::after {{
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }}
 
     body {{
-      margin: 0;
-      background: var(--paper);
-      color: var(--ink);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
       line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }}
 
     main {{
-      width: min(1040px, calc(100% - 32px));
+      width: min(1060px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 40px 0;
+      padding: 52px 0 80px;
     }}
 
     header {{
-      margin-bottom: 28px;
+      margin-bottom: 40px;
     }}
 
-    h1, h2, p {{
-      margin: 0;
+    .header-badge {{
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent-border);
+      background: var(--accent-soft);
+      border-radius: 20px;
+      padding: 3px 11px;
+      margin-bottom: 14px;
     }}
 
     h1 {{
-      font-size: 40px;
-      line-height: 1.05;
-      letter-spacing: 0;
+      font-size: 38px;
+      font-weight: 700;
+      line-height: 1.06;
+      letter-spacing: -0.03em;
     }}
 
     h2 {{
-      font-size: 18px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-2);
       margin-bottom: 14px;
     }}
 
     .subhead {{
-      color: var(--muted);
-      font-size: 17px;
-      margin-top: 10px;
+      font-size: 16px;
+      color: var(--text-2);
+      margin-top: 9px;
     }}
 
+    .subhead strong {{
+      color: var(--text);
+      font-weight: 600;
+    }}
+
+    /* ── Grid ── */
     .grid {{
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+      gap: 12px;
     }}
 
+    .wide {{ grid-column: 1 / -1; }}
+
+    /* ── Cards ── */
     .card {{
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+      animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
     }}
 
-    .wide {{
-      grid-column: 1 / -1;
+    .card:hover {{
+      border-color: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 4px 28px rgba(0, 0, 0, 0.5);
+      transform: translateY(-1px);
     }}
 
+    .grid > *:nth-child(1) {{ animation-delay: 0.04s; }}
+    .grid > *:nth-child(2) {{ animation-delay: 0.09s; }}
+    .grid > *:nth-child(3) {{ animation-delay: 0.14s; }}
+    .grid > *:nth-child(4) {{ animation-delay: 0.19s; }}
+    .grid > *:nth-child(5) {{ animation-delay: 0.24s; }}
+    .grid > *:nth-child(6) {{ animation-delay: 0.29s; }}
+    .grid > *:nth-child(7) {{ animation-delay: 0.34s; }}
+    .grid > *:nth-child(8) {{ animation-delay: 0.39s; }}
+    .grid > *:nth-child(9) {{ animation-delay: 0.44s; }}
+
+    @keyframes fadeUp {{
+      from {{ opacity: 0; transform: translateY(12px); }}
+      to   {{ opacity: 1; transform: translateY(0);    }}
+    }}
+
+    /* ── Graph card ── */
     .graph-card {{
       background: var(--graph-bg);
-      border-color: #242d36;
+      border-color: var(--graph-border);
       color: var(--graph-text);
       padding: 0;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }}
+
+    .graph-card:hover {{
+      transform: none;
+      box-shadow: none;
     }}
 
     .graph-head {{
       display: flex;
       justify-content: space-between;
       gap: 16px;
-      padding: 18px 20px;
-      border-bottom: 1px solid #242d36;
-      align-items: start;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--graph-border);
+      align-items: center;
+      flex-shrink: 0;
+    }}
+
+    .graph-head-left {{ flex: 1; min-width: 0; }}
+
+    .graph-head h2 {{
+      color: rgba(239, 246, 255, 0.45);
+      margin-bottom: 2px;
     }}
 
     .graph-head p {{
-      color: #aab8c8;
-      margin-top: 4px;
+      color: #8a9ab0;
+      font-size: 12px;
+      line-height: 1.4;
+    }}
+
+    .graph-controls {{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
     }}
 
     .graph-legend {{
@@ -144,29 +234,56 @@ def render_html_report(graph_plan: CareerGraphPlan, results: DemoQueryResults) -
       flex-wrap: wrap;
       justify-content: flex-end;
       gap: 8px;
-      min-width: 220px;
     }}
 
     .legend-item {{
       align-items: center;
-      color: #cbd6e2;
+      color: #7a8a9a;
       display: inline-flex;
-      font-size: 12px;
-      gap: 6px;
+      font-size: 11px;
+      gap: 5px;
       white-space: nowrap;
+      letter-spacing: 0.02em;
     }}
 
     .legend-dot {{
       border-radius: 999px;
       display: inline-block;
-      height: 9px;
-      width: 9px;
+      height: 7px;
+      width: 7px;
+      flex-shrink: 0;
     }}
 
+    /* ── Toggle button ── */
+    .graph-toggle-btn {{
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 7px;
+      color: #7a8a9a;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 30px;
+      width: 30px;
+      flex-shrink: 0;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }}
+
+    .graph-toggle-btn:hover {{
+      background: rgba(255, 255, 255, 0.11);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #e0eaf6;
+    }}
+
+    .graph-toggle-btn svg {{ display: block; }}
+
+    /* ── Graph wrap ── */
     .graph-wrap {{
-      height: min(620px, 72vh);
-      min-height: 430px;
+      height: min(600px, 70vh);
+      min-height: 420px;
       position: relative;
+      flex: 0 0 auto;
     }}
 
     #career-graph {{
@@ -175,6 +292,22 @@ def render_html_report(graph_plan: CareerGraphPlan, results: DemoQueryResults) -
       width: 100%;
     }}
 
+    /* ── Maximized state ── */
+    .graph-card.maximized {{
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      border-radius: 0;
+      border: none;
+    }}
+
+    .graph-card.maximized .graph-wrap {{
+      flex: 1 1 0;
+      height: 0;
+      min-height: 0;
+    }}
+
+    /* ── Tooltip (unchanged) ── */
     .graph-tooltip {{
       background: rgba(18, 24, 31, 0.94);
       border: 1px solid #324052;
@@ -202,17 +335,35 @@ def render_html_report(graph_plan: CareerGraphPlan, results: DemoQueryResults) -
       transform: translateY(0);
     }}
 
+    /* ── Metric ── */
+    .metric {{
+      color: var(--accent);
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }}
+
+    .muted {{
+      color: var(--text-2);
+      font-size: 12px;
+      margin-top: 6px;
+      line-height: 1.45;
+    }}
+
+    /* ── Lists ── */
     ul {{
       list-style: none;
-      margin: 0;
-      padding: 0;
       display: grid;
       gap: 10px;
     }}
 
     li {{
-      border-top: 1px solid var(--line);
+      border-top: 1px solid var(--border);
       padding-top: 10px;
+      color: var(--text);
+      font-size: 14px;
     }}
 
     li:first-child {{
@@ -222,77 +373,128 @@ def render_html_report(graph_plan: CareerGraphPlan, results: DemoQueryResults) -
 
     li span {{
       display: block;
-      color: var(--muted);
+      color: var(--text-2);
+      font-size: 12px;
       margin-top: 2px;
     }}
 
+    /* ── Skill items ── */
+    .skill-item {{
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }}
+
+    .skill-dot {{
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-block;
+    }}
+
+    .skill-proven .skill-dot {{ background: var(--accent); }}
+    .skill-missing .skill-dot {{ background: var(--text-3); }}
+
+    /* ── Path ── */
     .path {{
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      padding: 14px 16px;
       background: var(--accent-soft);
-      border: 1px solid #9fd8d0;
-      border-radius: 8px;
-      color: #104f49;
-      font-weight: 700;
-      padding: 14px;
-      overflow-wrap: anywhere;
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius-sm);
     }}
 
-    .metric {{
+    .path-step, .path-step-first, .path-step-last {{
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 6px;
+      padding: 4px 10px;
+      line-height: 1.3;
+    }}
+
+    .path-step {{
+      color: var(--text-2);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+    }}
+
+    .path-step-first {{
       color: var(--accent);
-      font-size: 28px;
-      font-weight: 800;
-      line-height: 1.15;
+      background: rgba(45, 212, 191, 0.12);
+      border: 1px solid var(--accent-border);
+      font-weight: 600;
     }}
 
-    .muted {{
-      color: var(--muted);
-      margin-top: 8px;
+    .path-step-last {{
+      color: var(--text);
+      background: var(--surface-2);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      font-weight: 600;
     }}
 
+    .path-arrow {{
+      color: var(--text-3);
+      font-size: 12px;
+      user-select: none;
+    }}
+
+    /* ── Mobile ── */
     @media (max-width: 760px) {{
       main {{
-        width: min(100% - 24px, 1040px);
-        padding: 28px 0;
+        width: calc(100% - 24px);
+        padding: 32px 0 48px;
       }}
 
-      h1 {{
-        font-size: 32px;
+      h1 {{ font-size: 28px; }}
+
+      .grid {{ grid-template-columns: 1fr; }}
+
+      .graph-head {{ flex-wrap: wrap; }}
+
+      .graph-controls {{
+        width: 100%;
+        justify-content: space-between;
       }}
 
-      .grid {{
-        grid-template-columns: 1fr;
-      }}
-
-      .graph-head {{
-        display: block;
-      }}
-
-      .graph-legend {{
-        justify-content: flex-start;
-        margin-top: 14px;
-      }}
+      .graph-legend {{ justify-content: flex-start; }}
     }}
   </style>
 </head>
 <body>
   <main>
     <header>
-      <h1>{escape(graph_plan.person_name)}'s CareerGraph</h1>
-      <p class="subhead">Target career: {escape(graph_plan.target_career)}</p>
+      <div class="header-badge">CareerGraph</div>
+      <h1>{escape(graph_plan.person_name)}'s Career Map</h1>
+      <p class="subhead">Targeting <strong>{escape(graph_plan.target_career)}</strong></p>
     </header>
 
     <section class="grid">
       <article class="card wide graph-card">
         <div class="graph-head">
-          <div>
+          <div class="graph-head-left">
             <h2>Career Knowledge Graph</h2>
             <p>Evidence, skills, resources, projects, and mentor help connected as a career map.</p>
           </div>
-          <div class="graph-legend" aria-label="Graph legend">
-            <span class="legend-item"><span class="legend-dot" style="background:#f7c948"></span>Person</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#60a5fa"></span>Skill</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#34d399"></span>Project</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#f472b6"></span>Resource</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#a78bfa"></span>Goal</span>
+          <div class="graph-controls">
+            <div class="graph-legend" aria-label="Graph legend">
+              <span class="legend-item"><span class="legend-dot" style="background:#f7c948"></span>Person</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#60a5fa"></span>Skill</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#34d399"></span>Project</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#f472b6"></span>Resource</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#a78bfa"></span>Goal</span>
+            </div>
+            <button id="graph-toggle" class="graph-toggle-btn" aria-label="Maximize graph">
+              <svg id="icon-expand" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <svg id="icon-collapse" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:none">
+                <path d="M5 1v4H1M13 5H9V1M9 13V9h4M1 9h4v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
         </div>
         <div class="graph-wrap">
@@ -315,8 +517,8 @@ def render_html_report(graph_plan: CareerGraphPlan, results: DemoQueryResults) -
 
       <article class="card wide">
         <h2>Shortest Career Path</h2>
-        <p class="path">{escape(path)}</p>
-        <p class="muted">Graph path: selected prerequisite chain from blocker skill to target career.</p>
+        <div class="path">{path_html}</div>
+        <p class="muted">Selected prerequisite chain from blocker skill to target career.</p>
       </article>
 
       <article class="card">
@@ -350,6 +552,28 @@ def render_html_report(graph_plan: CareerGraphPlan, results: DemoQueryResults) -
   <script id="career-graph-data" type="application/json">{graph_json}</script>
   <script>
 {GRAPH_SCRIPT}
+  </script>
+  <script>
+(() => {{
+  const card = document.querySelector('.graph-card');
+  const btn = document.getElementById('graph-toggle');
+  const iconExpand = document.getElementById('icon-expand');
+  const iconCollapse = document.getElementById('icon-collapse');
+
+  function setMaximized(on) {{
+    card.classList.toggle('maximized', on);
+    iconExpand.style.display = on ? 'none' : 'block';
+    iconCollapse.style.display = on ? 'block' : 'none';
+    btn.setAttribute('aria-label', on ? 'Minimize graph' : 'Maximize graph');
+    document.body.style.overflow = on ? 'hidden' : '';
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 16);
+  }}
+
+  btn.addEventListener('click', () => setMaximized(!card.classList.contains('maximized')));
+  document.addEventListener('keydown', (e) => {{
+    if (e.key === 'Escape' && card.classList.contains('maximized')) setMaximized(false);
+  }});
+}})();
   </script>
 </body>
 </html>
@@ -433,9 +657,7 @@ def build_graph_data(graph_plan: CareerGraphPlan, results: DemoQueryResults) -> 
             add_link(evidence.id, f"skill:{slugify(skill)}", "proves")
 
     for project in graph_plan.projects:
-        group = "project"
-        detail = project.description
-        add_node(project.id, project.name, group, detail)
+        add_node(project.id, project.name, "project", project.description)
         for skill in project.proves_skills:
             add_link(project.id, f"skill:{slugify(skill)}", "proves")
 
