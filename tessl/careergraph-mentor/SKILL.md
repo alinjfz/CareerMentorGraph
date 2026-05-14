@@ -1,35 +1,30 @@
 -----
-name: careergraph-mentor
-description: Use this skill when converting learner career context into a CareerGraph plan. Triggers when users ask for career guidance, skill gap analysis, learning paths, career transitions, or want to map their skills to a target role. Always use this skill when the user shares their background and asks what they should learn next, how to break into a field, or wants a structured career development plan.
------
+
+## name: careergraph-mentor
+description: Converts a learner’s career background into a structured CareerGraph plan as graph-safe JSON for Neo4j. Use when the user shares their skills, experience, or background and asks what to learn next, how to break into a new role, what skills they are missing, or how to plan a career transition. Also use when asked to map skills to a target career, identify learning paths, suggest projects to build, or recommend resources. Do NOT use for generic career advice, resume writing, or job searching — only when the goal is to produce a structured skill graph plan.
 
 # careergraph-mentor
 
-Use this skill when converting learner career context into a CareerGraph plan.
+Converts learner career context into a CareerGraph plan as graph-safe JSON for Neo4j.
 
 ## Purpose
 
-CareerGraph is a graph-first career mentor. The model should not give shallow
-advice like "learn React" without evidence, prerequisites, and a concrete proof
-path. It should produce graph-safe JSON that can be written into Neo4j.
+Produce evidence-based, graph-structured career plans. Do not give shallow advice like “learn React” without evidence, prerequisites, and a concrete proof path. Every recommendation must be expressible as a graph relationship.
 
 ## Extraction Rules
 
-- Treat concrete work as stronger than self-reported familiarity.
-- Evidence should be phrased as observable actions, such as "Built a static
-  portfolio page" or "Shipped a Flask API".
-- A skill is proven only when evidence or a project can reasonably demonstrate it.
-- Missing skills should be relevant to the target career and not already proven.
-- Prerequisites should form useful paths from current blockers to target skills
-  or the final career goal.
+- Treat concrete work as stronger evidence than self-reported familiarity.
+- Phrase evidence as observable actions: “Built a static portfolio page”, “Shipped a Flask API”.
+- A skill is only proven when evidence or a project can reasonably demonstrate it.
+- Missing skills must be relevant to the target career and not already proven.
+- Prerequisites must form useful paths from current blockers to target skills or the final goal.
 - Projects should prove multiple missing skills when possible.
 - Resources should teach the next missing skill or a direct prerequisite.
-- Help personas should map to the learner's current blocker, not to the broad
-  career goal.
+- Help personas should map to the learner’s current blocker, not the broad career goal.
 
-## Required JSON Shape
+## Output Format
 
-Return JSON only:
+Return JSON only. No prose, no markdown wrapper.
 
 ```json
 {
@@ -72,20 +67,22 @@ Return JSON only:
 }
 ```
 
-## Recommendation Rules
+## Graph Relationship Rules
 
-- Pick `nextBestSkill` from `missingSkills`.
+All recommendations must map to one of these relationships:
+
+- `Evidence -> PROVES -> Skill`
+- `Skill -> PREREQUISITE_OF -> Skill`
+- `Project -> PROVES -> Skill`
+- `Resource -> TEACHES -> Skill`
+- `HelpPersona -> CAN_HELP_WITH -> Skill`
+
+## Selecting nextBestSkill
+
+- Pick from `missingSkills` only.
 - Prefer prerequisite blockers over advanced framework skills.
-- Prefer portfolio projects that prove the most missing skills.
-- Justification must be expressible as graph relationships:
-  - `Evidence -> PROVES -> Skill`
-  - `Skill -> PREREQUISITE_OF -> Skill`
-  - `Project -> PROVES -> Skill`
-  - `Resource -> TEACHES -> Skill`
-  - `HelpPersona -> CAN_HELP_WITH -> Skill`
+- Prefer projects that prove the most missing skills at once.
 
-## Failure Behavior
+## Sparse Profiles
 
-If the learner profile is sparse, make conservative assumptions and keep the
-plan small. Do not fabricate specific credentials, employers, certificates, or
-project history.
+If the learner’s profile lacks detail, make conservative assumptions and keep the plan small. Do not fabricate credentials, employers, certificates, or project history.
