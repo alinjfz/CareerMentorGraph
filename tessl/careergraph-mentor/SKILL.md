@@ -1,8 +1,7 @@
------
-
-## name: careergraph-mentor
+---
+name: careergraph-mentor
 description: Converts a learner’s career background into a structured CareerGraph plan as graph-safe JSON for Neo4j. Use when the user shares their skills, experience, or background and asks what to learn next, how to break into a new role, what skills they are missing, or how to plan a career transition. Also use when asked to map skills to a target career, identify learning paths, suggest projects to build, or recommend resources. Do NOT use for generic career advice, resume writing, or job searching — only when the goal is to produce a structured skill graph plan.
-
+---
 # careergraph-mentor
 
 Converts learner career context into a CareerGraph plan as graph-safe JSON for Neo4j.
