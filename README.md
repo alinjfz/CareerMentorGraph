@@ -1,8 +1,27 @@
 # CareerGraph
 
-CareerGraph is a graph-first AI career mentor demo. It turns a learner profile
-into a structured career graph, recommends a next skill, selects a portfolio
-project, and generates an HTML career map.
+> **3rd place — Hack Night London by The Builders Collective at Tessl (2-hour hackathon, ~20 teams, solo build)**
+
+CareerGraph is a graph-first AI career mentor. It turns a learner's career background into a
+persistent knowledge graph in Neo4j, then answers graph-native questions: which skill is blocking
+your progress, which project covers the most gaps, and what is your shortest path to your target role.
+
+Unlike generic "learn X next" advice, every recommendation is justified by a graph traversal —
+not a language model guess.
+
+## Screenshots
+
+**HTML Career Map** — color-coded graph of skills, evidence, projects, and career path:
+
+![Career Map](images/1.png)
+
+**Neo4j Browser** — 22 nodes, 45 relationships live in the graph database:
+
+![Neo4j Graph](images/2.png)
+
+**CLI Demo** — full pipeline output in the terminal:
+
+![CLI Output](images/3.png)
 
 ## Quick Demo
 
@@ -13,8 +32,6 @@ project, and generates an HTML career map.
 The default path is deterministic and does not require API keys or Neo4j.
 
 ## Local Installation
-
-The project is set up with a local virtual environment:
 
 ```bash
 python3 -m venv .venv
@@ -30,8 +47,7 @@ NEO4J_PASSWORD=CareerGraphPass123
 NEO4J_DATABASE=neo4j
 ```
 
-`OPENAI_API_KEY` is intentionally blank. Add your key only when you want live
-LLM extraction.
+`OPENAI_API_KEY` is intentionally blank. Add your key only when you want live LLM extraction.
 
 ## Optional LLM Extraction
 
@@ -41,8 +57,8 @@ Set `OPENAI_API_KEY` in `.env`, then run:
 .venv/bin/python careergraph.py demo --use-llm
 ```
 
-If the LLM output fails validation, CareerGraph retries once and then falls
-back to the built-in Full-stack Developer graph.
+If the LLM output fails validation, CareerGraph retries once and then falls back to the
+built-in Full-stack Developer graph.
 
 ## Optional Neo4j Persistence
 
@@ -52,26 +68,15 @@ Start Neo4j with Docker:
 scripts/start_neo4j.sh
 ```
 
-Neo4j Browser opens at:
+Neo4j Browser opens at `http://localhost:7474` — username `neo4j`, password `CareerGraphPass123`.
 
-```text
-http://localhost:7474
-```
-
-Use:
-
-```text
-Username: neo4j
-Password: CareerGraphPass123
-```
-
-Then write/query the graph:
+Write and query the graph:
 
 ```bash
 .venv/bin/python careergraph.py demo --demo-fast --write-neo4j --query-neo4j
 ```
 
-Stop Neo4j with:
+Stop Neo4j:
 
 ```bash
 scripts/stop_neo4j.sh
@@ -83,8 +88,31 @@ scripts/stop_neo4j.sh
 .venv/bin/python -m unittest discover -s tests
 ```
 
-## Post-MVP Expansion
+## Vision
 
-After the sponsor demo is stable, the next useful additions are multiple target
-career comparisons, resume ingestion, GitHub evidence ingestion, skill
-confidence scoring, timeline planning, and a web UI over the same graph layer.
+CareerGraph was built in 2 hours as a proof of concept. The core architecture —
+graph-native reasoning over LLM-extracted knowledge — is designed to scale into a
+much richer career intelligence layer.
+
+### Richer Evidence Ingestion
+- Resume and CV parsing to extract past roles, projects, and technologies as graph nodes
+- GitHub activity analysis to infer proven skills from real commit and project history
+- Job description parsing to auto-generate target career requirement graphs
+- Course and certification records linked directly to skill nodes
+
+### Smarter Graph Reasoning
+- Skill confidence scoring weighted by evidence recency and depth
+- Timeline planning with estimated months-per-skill based on difficulty and prerequisites
+- Multi-career comparison showing shortest-path divergence across N target roles
+- Skill demand overlay connecting the graph to live job posting frequency data
+
+### Collaborative Knowledge
+- Mentor annotation of learner graphs (mentors add evidence and prerequisite edges directly)
+- Community-validated prerequisite chains (crowd-sourced skill ordering)
+- Cohort comparison showing where peers sit in the same career graph
+
+### Product Surface
+- Web UI over the same Neo4j layer with interactive graph exploration
+- Natural language query interface ("what is blocking me from becoming a data engineer?")
+- Export to personal learning roadmaps (Notion, Obsidian, markdown)
+- API integration with learning platforms (Coursera, LinkedIn Learning, Udemy)
