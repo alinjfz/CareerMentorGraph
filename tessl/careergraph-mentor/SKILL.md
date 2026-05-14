@@ -1,3 +1,9 @@
+-----
+
+## name: careergraph-mentor
+description: Use this skill when converting learner career context into a CareerGraph plan. Triggers when users ask for career guidance, skill gap analysis, learning paths, career transitions, or want to map their skills to a target role. Always use this skill when the user shares their background and asks what they should learn next, how to break into a field, or wants a structured career development plan.
+-----
+
 # careergraph-mentor
 
 Use this skill when converting learner career context into a CareerGraph plan.
