@@ -6,7 +6,7 @@ CareerGraph is a graph-first AI career mentor. It turns a learner's career backg
 persistent knowledge graph in Neo4j, then answers graph-native questions: which skill is blocking
 your progress, which project covers the most gaps, and what is your shortest path to your target role.
 
-Unlike generic "learn X next" advice, every recommendation is justified by a graph traversal —
+Unlike generic "learn X next" advice, every recommendation is justified by a graph traversal, and
 not a language model guess.
 
 ## Screenshots
