@@ -1,6 +1,7 @@
 # CareerGraph
 
-> **3rd place — Hack Night London by The Builders Collective at Tessl (2-hour hackathon, ~20 teams, solo build)**
+> **🥉 3rd place — Hack Night London by The Builders Collective at Tessl - May 13, 2026**
+> Solo build - one evening - 39 teams - 150 people
 
 CareerGraph is a graph-first AI career mentor. It turns a learner's career background into a
 persistent knowledge graph in Neo4j, then answers graph-native questions: which skill is blocking
@@ -9,19 +10,27 @@ your progress, which project covers the most gaps, and what is your shortest pat
 Unlike generic "learn X next" advice, every recommendation is justified by a graph traversal, and
 not a language model guess.
 
+## Demo
+
+![CareerGraph Demo](assets/demo.gif)
+
+→ [Open interactive career map (HTML)](assets/career_map.html)
+
 ## Screenshots
 
 **HTML Career Map** — color-coded graph of skills, evidence, projects, and career path:
 
-![Career Map](images/1.png)
+![Career Map](assets/1.png)
+
+![Career Map (zoomed)](assets/4.png)
 
 **Neo4j Browser** — 22 nodes, 45 relationships live in the graph database:
 
-![Neo4j Graph](images/2.png)
+![Neo4j Graph](assets/2.png)
 
 **CLI Demo** — full pipeline output in the terminal:
 
-![CLI Output](images/3.png)
+![CLI Output](assets/3.png)
 
 ## Quick Demo
 
@@ -90,28 +99,33 @@ scripts/stop_neo4j.sh
 
 ## Vision
 
-CareerGraph was built in 2 hours as a proof of concept. The core architecture —
-graph-native reasoning over LLM-extracted knowledge — is designed to scale into a
-much richer career intelligence layer.
+CareerGraph was built in one evening as a working MVP — not a mock, not a slide deck.
+The goal was a system that actually runs, writes to Neo4j, and produces a real diagnosis end-to-end.
+The core architecture — graph-native reasoning over LLM-extracted knowledge — is designed to scale
+into a much richer career intelligence layer.
 
 ### Richer Evidence Ingestion
+
 - Resume and CV parsing to extract past roles, projects, and technologies as graph nodes
 - GitHub activity analysis to infer proven skills from real commit and project history
 - Job description parsing to auto-generate target career requirement graphs
 - Course and certification records linked directly to skill nodes
 
 ### Smarter Graph Reasoning
+
 - Skill confidence scoring weighted by evidence recency and depth
 - Timeline planning with estimated months-per-skill based on difficulty and prerequisites
 - Multi-career comparison showing shortest-path divergence across N target roles
 - Skill demand overlay connecting the graph to live job posting frequency data
 
 ### Collaborative Knowledge
+
 - Mentor annotation of learner graphs (mentors add evidence and prerequisite edges directly)
 - Community-validated prerequisite chains (crowd-sourced skill ordering)
 - Cohort comparison showing where peers sit in the same career graph
 
 ### Product Surface
+
 - Web UI over the same Neo4j layer with interactive graph exploration
 - Natural language query interface ("what is blocking me from becoming a data engineer?")
 - Export to personal learning roadmaps (Notion, Obsidian, markdown)
